@@ -124,3 +124,6 @@ required-features = ["serde"]
 [[example]]
 name = "userdata"
 required-features = ["macros"]
+
+[patch.crates-io]
+luau0-src = { path = "../luau-src-rs" }
