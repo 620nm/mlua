@@ -126,4 +126,4 @@ name = "userdata"
 required-features = ["macros"]
 
 [patch.crates-io]
-luau0-src = { path = "../luau-src-rs" }
+luau0-src = { git = "https://github.com/620nm/luau-src-rs", branch = "lunatic" }
