@@ -158,8 +158,9 @@ pub(crate) unsafe fn pop_error(state: *mut ffi::lua_State, err_code: c_int) -> E
 }
 
 // Create C closures under `lua_cpcall` so an allocation failure doesn't escape
-#[cfg(any(feature = "lua51", feature = "luajit"))]
+#[cfg(any(feature = "lua51", feature = "luajit", feature = "luau"))]
 unsafe fn push_protected_cfunctions(state: *mut ffi::lua_State, f: ffi::lua_CFunction) -> Result<()> {
+    #[cfg(any(feature = "lua51", feature = "luajit"))]
     if !MemoryState::get(state).is_null() {
         MemoryState::relax_limit_with(state, || {
             ffi::lua_pushcfunction(state, error_traceback);
@@ -208,7 +209,7 @@ unsafe fn push_protected_cfunctions(state: *mut ffi::lua_State, f: ffi::lua_CFun
     Ok(())
 }
 
-#[cfg(not(any(feature = "lua51", feature = "luajit")))]
+#[cfg(not(any(feature = "lua51", feature = "luajit", feature = "luau")))]
 #[inline]
 unsafe fn push_protected_cfunctions(state: *mut ffi::lua_State, f: ffi::lua_CFunction) -> Result<()> {
     MemoryState::relax_limit_with(state, || {

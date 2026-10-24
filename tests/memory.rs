@@ -58,6 +58,50 @@ fn test_memory_limit() -> Result<()> {
 }
 
 #[test]
+fn test_memory_limit_create_function() -> Result<()> {
+    const MAX_FUNCTIONS: usize = 1_000_000;
+
+    let lua = Lua::new();
+    lua.gc_collect()?;
+    lua.gc_stop();
+
+    let warmup = [
+        lua.create_function(|_, ()| Ok(()))?,
+        lua.create_function(|_, ()| Ok(()))?,
+    ];
+    warmup[0].call::<()>(())?;
+
+    if cfg!(feature = "luajit") && lua.set_memory_limit(0).is_err() {
+        // seems this luajit version does not support memory limit
+        return Ok(());
+    }
+
+    let limit = lua.used_memory() + 1024 * 1024;
+    lua.set_memory_limit(limit)?;
+
+    let mut functions = Vec::with_capacity(MAX_FUNCTIONS);
+    for _ in 0..MAX_FUNCTIONS {
+        match lua.create_function(|_, ()| Ok(())) {
+            Ok(function) => functions.push(function),
+            Err(Error::MemoryError(_)) => break,
+            Err(err) => return Err(err),
+        }
+    }
+
+    let created = functions.len();
+    let used = lua.used_memory();
+    assert!(
+        created < MAX_FUNCTIONS,
+        "create_function did not trigger MemoryError before cap: created={created} used={used} limit={limit}"
+    );
+    assert!(
+        used <= limit,
+        "create_function exceeded memory limit: created={created} used={used} limit={limit}"
+    );
+    Ok(())
+}
+
+#[test]
 fn test_result_reference_exhaustion() -> Result<()> {
     let lua = Lua::new();
     if cfg!(feature = "luajit") && lua.set_memory_limit(0).is_err() {
