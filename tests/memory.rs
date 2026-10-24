@@ -90,7 +90,6 @@ fn test_memory_limit_create_function() -> Result<()> {
 
     let created = functions.len();
     let used = lua.used_memory();
-    println!("created={created} used={used} limit={limit}");
     assert!(
         created < MAX_FUNCTIONS,
         "create_function did not trigger MemoryError before cap: created={created} used={used} limit={limit}"
